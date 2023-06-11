@@ -1,17 +1,37 @@
-// api/users.js
 
-// import dbConnect from "../../lib/dbConnect";
-// import User from "../../models/User";
-import { request } from "http";
-import type { NextApiRequest, NextApiResponse } from "next";
+import { NextResponse } from "next/server";
+import dbConnect from "@/utils/database";
+import Room from "@/models/Rooms";
 
-type Data = {
-  name: string;
-};
+export async function GET(request: Request) {
+  try {
+    await dbConnect();
+    const rooms = await Room.find({});
+    return new Response(JSON.stringify(rooms), { status: 200 });
+  } catch (error) {
+    return new Response("no method for this endpoint", { status: 400 });
+  }
 
-export default function handler(
-  req: NextApiRequest,
-  res: NextApiResponse<Data>
-) {
-  res.status(200).json({ name: "John Doe" });
+  return NextResponse.json({ name: "John Doe" }, { status: 200 });
+  /// new
+
+  // const { method } = req;
+
+  // await dbConnect();
+
+  // switch (method) {
+  //   case "GET":
+  //     try {
+  //       const rooms = await Room.find({});
+  //       res.status(200).json(rooms);
+  //     } catch (error) {
+  //       res.status(400).json(error.message as any);
+  //     }
+  //     break;
+  //   default:
+  //     res.status(400).json("no method for this endpoint");
+  //     break;
+  // }
 }
+
+// api/users.js
