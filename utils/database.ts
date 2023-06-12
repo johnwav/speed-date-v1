@@ -38,7 +38,7 @@ async function dbConnect() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       // bufferCommands: false,
-      dbName: "omegle",
+      // dbName: "omegle",
       // bufferMaxEntries: 0,
       // useFindAndModify: true,
       // useCreateIndex: true,
