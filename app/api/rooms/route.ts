@@ -3,9 +3,9 @@ import dbConnect from "@/utils/database";
 import Room from "@/models/Rooms";
 
 export async function GET(request: Request) {
-  await dbConnect();
 
   try {
+    await dbConnect();
     const rooms = await Room.find({});
     return new Response(JSON.stringify(rooms), { status: 200 });
   } catch (error) {
