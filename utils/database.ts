@@ -20,7 +20,7 @@ if (!MONGODB_URI) {
  * during API Route usage.
  */
 
-//@ts-ignore
+// @ts-ignore
 let cached = global.mongoose;
 
 if (!cached) {
@@ -38,9 +38,9 @@ async function dbConnect() {
       useNewUrlParser: true,
       useUnifiedTopology: true,
       bufferCommands: false,
-      bufferMaxEntries: 0,
-      useFindAndModify: true,
-      useCreateIndex: true,
+      // bufferMaxEntries: 0,
+      // useFindAndModify: true,
+      // useCreateIndex: true,
     };
 
     cached.promise = mongoose
