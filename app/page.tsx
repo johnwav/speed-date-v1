@@ -54,15 +54,15 @@ export default function Home() {
 
   async function fetchRooms() {
     getRandomRoom().then((rooms) => {
-      if (rooms.length > 0) {
+      if (rooms && rooms.length > 0) {
         setRoom(rooms[0]);
-        connectToAgora(rooms[0]._id, userId, (message: Tmessage) =>
+        connectToAgora(rooms[0]?._id, userId, (message: Tmessage) =>
           setMessages((curr) => [...curr, message])
         );
       } else {
         createRoom().then((room) => {
           setRoom(room);
-          connectToAgora(rooms[0]._id, userId, (message: Tmessage) =>
+          connectToAgora(room._id, userId, (message: Tmessage) =>
             setMessages((curr) => [...curr, message])
           );
         });
