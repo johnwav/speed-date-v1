@@ -9,10 +9,14 @@ type Room = {
 
 type Tmessage = {
   userId: string;
-  message: string;
+  message: string | undefined;
 };
 
-async function connectToAgora(roomId: string, userId: string) {
+async function connectToAgora(
+  roomId: string,
+  userId: string,
+  onMessage: (message: Tmessage) => void
+) {
   const { default: AgoraRTM } = await import("agora-rtm-sdk");
   const client = AgoraRTM.createInstance(process.env.NEXT_PUBLIC_AGORA_APP_ID!);
   await client.login({
@@ -21,7 +25,11 @@ async function connectToAgora(roomId: string, userId: string) {
   const channel = await client.createChannel(roomId);
   await channel.join();
   channel.on("ChannelMessage", (message, peerId) => {
-    console.log(message, peerId);
+    onMessage({
+      userId,
+      message: message.text,
+    });
+    // console.log(message, peerId);
   });
 }
 
@@ -42,17 +50,21 @@ async function createRoom(): Promise<Room> {
 export default function Home() {
   const [room, setRoom] = useState<Room | undefined>();
   const [userId, setuserId] = useState(Math.random() * 1e6 + "");
-  const [message, setmessage] = useState([]);
+  const [message, setMessages] = useState<Tmessage[]>([]);
 
   async function fetchRooms() {
     getRandomRoom().then((rooms) => {
       if (rooms.length > 0) {
         setRoom(rooms[0]);
-        connectToAgora(rooms[0]._id, userId);
+        connectToAgora(rooms[0]._id, userId, (message: Tmessage) =>
+          setMessages((curr) => [...curr, message])
+        );
       } else {
         createRoom().then((room) => {
           setRoom(room);
-          connectToAgora(room?._id, userId);
+          connectToAgora(rooms[0]._id, userId, (message: Tmessage) =>
+            setMessages((curr) => [...curr, message])
+          );
         });
       }
     });
