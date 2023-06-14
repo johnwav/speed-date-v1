@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState } from "react";
+import { ChangeEvent, useRef, useState } from "react";
 import styles from "./page.module.css";
 import { RtmChannel } from "agora-rtm-sdk";
 
@@ -59,7 +59,10 @@ export default function Home() {
   const channelRef = useRef<RtmChannel>();
   const isChatting = room!!;
 
-  async function handleSendMessage() {
+  async function handleSendMessage(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    if (!input) return;
     await channelRef.current?.sendMessage({
       text: input,
     });
@@ -106,22 +109,30 @@ export default function Home() {
   return (
     <main className={styles.main}>
       {isChatting ? (
-        <>
-          {room?._id}ß
-          <ul>
-            {messages.map((message, index) => (
-              <li key={index}>
-                {convertID(message)} {message?.message}
-              </li>
-            ))}
-          </ul>
-          <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            type="text"
-          />
-          <button onClick={handleSendMessage}>send</button>
-        </>
+        <div className="chat-window">
+          <div className="video-panel">
+            <div className="video-stream"></div>
+            <div className="video-stream"></div>
+          </div>
+          <div className="chat-panel">
+            {/* {room?._id} */}
+            <ul>
+              {messages.map((message, index) => (
+                <li key={index}>
+                  {convertID(message)} {message?.message}
+                </li>
+              ))}
+            </ul>
+            <form onSubmit={handleSendMessage}>
+              <input
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                type="text"
+              />
+              <button type="submit">send</button>
+            </form>
+          </div>
+        </div>
       ) : (
         <>
           <button onClick={handleStartChat}>Chat</button>
