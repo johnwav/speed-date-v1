@@ -25,7 +25,7 @@ async function connectToAgora(
   });
   const channel = await client.createChannel(roomId);
   await channel.join();
-  channel.on("ChannelMessage", (message, peerId) => {
+  channel.on("ChannelMessage", (message, userId) => {
     onMessage({
       userId,
       message: message.text,
@@ -53,15 +53,23 @@ async function createRoom(): Promise<Room> {
 
 export default function Home() {
   const [room, setRoom] = useState<Room | undefined>();
-  const [userId, setuserId] = useState(Math.random() * 1e6 + "");
+  const [userId] = useState(() => parseInt(`${Math.random() * 1e6}`) + "");
   const [messages, setMessages] = useState<Tmessage[]>([]);
   const [input, setInput] = useState("");
   const channelRef = useRef<RtmChannel>();
+  const isChatting = room!!;
 
   async function handleSendMessage() {
     await channelRef.current?.sendMessage({
       text: input,
     });
+    setMessages((cur) => [
+      ...cur,
+      {
+        userId,
+        message: input,
+      },
+    ]);
     setInput("");
   }
 
@@ -91,25 +99,34 @@ export default function Home() {
     fetchRooms();
   }
 
+  function convertID(message: Tmessage) {
+    return message.userId === userId ? "You" : "Them";
+  }
+
   return (
     <main className={styles.main}>
-      {room?._id}
-      <ul>
-        {messages.map((message, index) => (
-          <li key={index}>
-            {message?.userId} {message?.message}
-          </li>
-        ))}
-      </ul>
-
-      <input
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        type="text"
-      />
-      <button onClick={handleSendMessage}>send</button>
-
-      <button onClick={handleStartChat}>Chat</button>
+      {isChatting ? (
+        <>
+          {room?._id}ß
+          <ul>
+            {messages.map((message, index) => (
+              <li key={index}>
+                {convertID(message)} {message?.message}
+              </li>
+            ))}
+          </ul>
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            type="text"
+          />
+          <button onClick={handleSendMessage}>send</button>
+        </>
+      ) : (
+        <>
+          <button onClick={handleStartChat}>Chat</button>
+        </>
+      )}
     </main>
   );
 }
