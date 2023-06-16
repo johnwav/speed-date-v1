@@ -1,5 +1,5 @@
 "use client";
-import { ChangeEvent, useRef, useState } from "react";
+import { useRef, useState } from "react";
 import styles from "./page.module.css";
 import { RtmChannel } from "agora-rtm-sdk";
 
@@ -13,7 +13,20 @@ type Tmessage = {
   message: string | undefined;
 };
 
-async function connectToAgora(
+async function connectToAgoraRTC (userId: string, roomId: string, ) {
+  const {default: AgoraRTC} = await import ("agora-rtc-sdk-ng")
+  const client = AgoraRTC.createClient({
+    mode: "rtc",
+    codec: "vp8"
+  })
+
+  // await client.join({
+  //   process.env.NEXT_PUBLIC_AGORA_APP_ID,
+
+  // })
+}
+
+async function connectToAgoraRTM(
   roomId: string,
   userId: string,
   onMessage: (message: Tmessage) => void
@@ -80,7 +93,7 @@ export default function Home() {
     const rooms = await getRandomRoom();
     if (rooms && rooms.length > 0) {
       setRoom(rooms[0]);
-      const { channel } = await connectToAgora(
+      const { channel } = await connectToAgoraRTM(
         rooms[0]?._id,
         userId,
         (message: Tmessage) => setMessages((curr) => [...curr, message])
@@ -89,7 +102,7 @@ export default function Home() {
     } else {
       const room = await createRoom();
       setRoom(room);
-      const { channel } = await connectToAgora(
+      const { channel } = await connectToAgoraRTM(
         room._id,
         userId,
         (message: Tmessage) => setMessages((curr) => [...curr, message])
@@ -115,7 +128,7 @@ export default function Home() {
             <div className="video-stream"></div>
           </div>
           <div className="chat-panel">
-            {/* {room?._id} */}
+            {room?._id}
             <ul>
               {messages.map((message, index) => (
                 <li key={index}>
