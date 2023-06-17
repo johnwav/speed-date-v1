@@ -20,10 +20,10 @@ async function connectToAgoraRTC (userId: string, roomId: string, ) {
     codec: "vp8"
   })
 
-  // await client.join({
-  //   process.env.NEXT_PUBLIC_AGORA_APP_ID,
+  await client.join({
+    process.env.NEXT_PUBLIC_AGORA_APP_ID,
 
-  // })
+  })
 }
 
 async function connectToAgoraRTM(
