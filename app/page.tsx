@@ -2,6 +2,8 @@
 import { useRef, useState } from "react";
 import styles from "./page.module.css";
 import { RtmChannel } from "agora-rtm-sdk";
+import { ICameraVideoTrack, IRemoteVideoTrack } from "agora-rtc-sdk-ng";
+import { VideoPlayer } from "./components/VideoPlayer";
 
 type Room = {
   _id: string;
@@ -13,17 +15,38 @@ type Tmessage = {
   message: string | undefined;
 };
 
-async function connectToAgoraRTC (userId: string, roomId: string, ) {
-  const {default: AgoraRTC} = await import ("agora-rtc-sdk-ng")
+async function connectToAgoraRTC(
+  userId: string,
+  roomId: string,
+  onVideoConnect: any,
+  onWebcamStart: any
+) {
+  const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
   const client = AgoraRTC.createClient({
     mode: "rtc",
-    codec: "vp8"
-  })
+    codec: "vp8",
+  });
 
-  await client.join({
-    process.env.NEXT_PUBLIC_AGORA_APP_ID,
+  await client.join(
+    process.env.NEXT_PUBLIC_AGORA_APP_ID!,
+    roomId,
+    "68c79cc200a9448490ef2721756e89c2",
+    userId
+  );
 
-  })
+  client.on("user-published", (themUser, mediaType) => {
+    client.subscribe(themUser, mediaType).then(() => {
+      if (mediaType === "video") {
+        onVideoConnect(themUser);
+      }
+    });
+  });
+
+  const tracks = await AgoraRTC.createMicrophoneAndCameraTracks();
+  onWebcamStart(tracks[1]);
+  await client.publish(tracks);
+
+  return { tracks, client };
 }
 
 async function connectToAgoraRTM(
@@ -69,6 +92,9 @@ export default function Home() {
   const [userId] = useState(() => parseInt(`${Math.random() * 1e6}`) + "");
   const [messages, setMessages] = useState<Tmessage[]>([]);
   const [input, setInput] = useState("");
+  const [themVideo, setThemVideo] = useState<IRemoteVideoTrack>();
+  const [myVideo, setMyVideo] = useState<ICameraVideoTrack>();
+
   const channelRef = useRef<RtmChannel>();
   const isChatting = room!!;
 
@@ -98,6 +124,12 @@ export default function Home() {
         userId,
         (message: Tmessage) => setMessages((curr) => [...curr, message])
       );
+      await connectToAgoraRTC(
+        rooms[0]._id,
+        userId,
+        (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
+        (myVideo: ICameraVideoTrack) => setMyVideo(myVideo)
+      );
       channelRef.current = channel;
     } else {
       const room = await createRoom();
@@ -106,6 +138,12 @@ export default function Home() {
         room._id,
         userId,
         (message: Tmessage) => setMessages((curr) => [...curr, message])
+      );
+      await connectToAgoraRTC(
+        room._id,
+        userId,
+        (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
+        (myVideo: ICameraVideoTrack) => setMyVideo(myVideo)
       );
       channelRef.current = channel;
     }
@@ -124,8 +162,22 @@ export default function Home() {
       {isChatting ? (
         <div className="chat-window">
           <div className="video-panel">
-            <div className="video-stream"></div>
-            <div className="video-stream"></div>
+            <div className="video-stream">
+              {myVideo && (
+                <VideoPlayer
+                  style={{ width: "300px", height: "300px" }}
+                  videoTrack={myVideo}
+                />
+              )}
+            </div>
+            <div className="video-stream">
+              {themVideo && (
+                <VideoPlayer
+                  style={{ width: "300px", height: "300px" }}
+                  videoTrack={themVideo}
+                />
+              )}
+            </div>
           </div>
           <div className="chat-panel">
             {room?._id}
