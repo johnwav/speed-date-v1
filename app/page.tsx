@@ -16,8 +16,8 @@ type Tmessage = {
 };
 
 async function connectToAgoraRTC(
-  userId: string,
   roomId: string,
+  userId: string,
   onVideoConnect: any,
   onWebcamStart: any
 ) {
