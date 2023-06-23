@@ -2,7 +2,11 @@
 import { useRef, useState } from "react";
 import styles from "./page.module.css";
 import { RtmChannel } from "agora-rtm-sdk";
-import { ICameraVideoTrack, IRemoteVideoTrack } from "agora-rtc-sdk-ng";
+import {
+  IAgoraRTCRemoteUser,
+  ICameraVideoTrack,
+  IRemoteVideoTrack,
+} from "agora-rtc-sdk-ng";
 import { VideoPlayer } from "./components/VideoPlayer";
 
 type Room = {
@@ -19,7 +23,7 @@ async function connectToAgoraRTC(
   roomId: string,
   userId: string,
   onVideoConnect: any,
-  onWebcamStart: any
+  onWebcamStart: (arg: ICameraVideoTrack) => void
 ) {
   const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
   const client = AgoraRTC.createClient({
