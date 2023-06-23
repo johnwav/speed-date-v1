@@ -3,7 +3,6 @@ import { useRef, useState } from "react";
 import styles from "./page.module.css";
 import { RtmChannel } from "agora-rtm-sdk";
 import {
-  IAgoraRTCRemoteUser,
   ICameraVideoTrack,
   IRemoteVideoTrack,
 } from "agora-rtc-sdk-ng";
@@ -34,7 +33,7 @@ async function connectToAgoraRTC(
   await client.join(
     process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     roomId,
-    "68c79cc200a9448490ef2721756e89c2",
+    "eccb013cf2d743a8aa8ed4fb209f671e",
     userId
   );
 
