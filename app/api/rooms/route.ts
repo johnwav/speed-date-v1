@@ -1,8 +1,31 @@
 // import { NextResponse } from "next/server";
 import dbConnect from "@/utils/database";
 import Room from "@/models/Rooms";
+import { RtcRole, RtcTokenBuilder } from "agora-access-token";
+import { NextRequest } from "next/server";
 
-export async function GET(request: Request) {
+function getToken(roomId: string, userId: string) {
+  const appID = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
+  const appCertificate = process.env.AGORA_APP_CERT!;
+  const channelName = roomId;
+  const account = userId;
+  const role = RtcRole.PUBLISHER;
+  const expirationTimeInSeconds = 3600;
+  const currentTimeStamp = Math.floor(Date.now() / 1000);
+  const privilegeExpiredTs = currentTimeStamp + expirationTimeInSeconds;
+
+  const token = RtcTokenBuilder.buildTokenWithAccount(
+    appID,
+    appCertificate,
+    channelName,
+    account,
+    role,
+    privilegeExpiredTs
+  );
+}
+
+export async function GET(request: NextRequest) {
+  const userId = request.nextUrl.searchParams.get("userId")!;
   try {
     await dbConnect();
     const rooms = await Room.aggregate([
@@ -14,20 +37,38 @@ export async function GET(request: Request) {
       await Room.findByIdAndUpdate(roomId, {
         status: "chatting",
       });
+      return new Response(
+        JSON.stringify({
+          rooms,
+          token: getToken(roomId, userId),
+        }),
+        { status: 200 }
+      );
+    } else {
+      return new Response(JSON.stringify({ rooms: [], token: null }), {
+        status: 200,
+      });
     }
-    return new Response(JSON.stringify(rooms), { status: 200 });
   } catch (error) {
-    return new Response(error as any, { status: 400 });
+    return new Response((error as any).message, { status: 400 });
   }
 }
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
+  const userId = request.nextUrl.searchParams.get("userId")!;
+
   try {
     await dbConnect();
     const room = await Room.create({
       status: "waiting",
     });
-    return new Response(JSON.stringify(room), { status: 200 });
+    return new Response(
+      JSON.stringify({
+        room,
+        token: getToken(room._id, userId),
+      }),
+      { status: 200 }
+    );
   } catch (error) {
     return new Response("failed to create new room", { status: 500 });
   }
