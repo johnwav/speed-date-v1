@@ -2,11 +2,18 @@
 import { useRef, useState } from "react";
 import styles from "./page.module.css";
 import { RtmChannel } from "agora-rtm-sdk";
-import {
-  ICameraVideoTrack,
-  IRemoteVideoTrack,
-} from "agora-rtc-sdk-ng";
+import { ICameraVideoTrack, IRemoteVideoTrack } from "agora-rtc-sdk-ng";
 import { VideoPlayer } from "./components/VideoPlayer";
+
+type TCreateRoomResponse = {
+  room: Room;
+  token: string;
+};
+
+type TGetRandomRoomResponse = {
+  token: string;
+  rooms: Room[];
+};
 
 type Room = {
   _id: string;
@@ -22,7 +29,8 @@ async function connectToAgoraRTC(
   roomId: string,
   userId: string,
   onVideoConnect: any,
-  onWebcamStart: (arg: ICameraVideoTrack) => void
+  onWebcamStart: (arg: ICameraVideoTrack) => void,
+  token: string
 ) {
   const { default: AgoraRTC } = await import("agora-rtc-sdk-ng");
   const client = AgoraRTC.createClient({
@@ -33,7 +41,7 @@ async function connectToAgoraRTC(
   await client.join(
     process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     roomId,
-    "eccb013cf2d743a8aa8ed4fb209f671e",
+    // token,
     userId
   );
 
@@ -55,12 +63,14 @@ async function connectToAgoraRTC(
 async function connectToAgoraRTM(
   roomId: string,
   userId: string,
-  onMessage: (message: Tmessage) => void
+  onMessage: (message: Tmessage) => void,
+  token: string
 ) {
   const { default: AgoraRTM } = await import("agora-rtm-sdk");
   const client = AgoraRTM.createInstance(process.env.NEXT_PUBLIC_AGORA_APP_ID!);
   await client.login({
     uid: userId,
+    token,
   });
   const channel = await client.createChannel(roomId);
   await channel.join();
@@ -76,14 +86,14 @@ async function connectToAgoraRTM(
   };
 }
 
-async function getRandomRoom(): Promise<Room[]> {
-  const response = await fetch("/api/rooms");
+async function getRandomRoom(userId: string): Promise<TGetRandomRoomResponse> {
+  const response = await fetch(`/api/rooms?userId=${userId}`);
   const rooms = await response.json();
   return rooms;
 }
 
-async function createRoom(): Promise<Room> {
-  const response = await fetch("/api/rooms", {
+async function createRoom(userId: string): Promise<TCreateRoomResponse> {
+  const response = await fetch(`/api/rooms?userId=${userId}`, {
     method: "POST",
   });
   const room = await response.json();
@@ -119,36 +129,40 @@ export default function Home() {
   }
 
   async function fetchRooms() {
-    const rooms = await getRandomRoom();
+    const { rooms, token } = await getRandomRoom(userId);
     if (rooms && rooms.length > 0) {
       setRoom(rooms[0]);
-      const { channel } = await connectToAgoraRTM(
-        rooms[0]?._id,
-        userId,
-        (message: Tmessage) => setMessages((curr) => [...curr, message])
-      );
+      // const { channel } = await connectToAgoraRTM(
+      //   rooms[0]?._id,
+      //   userId,
+      //   (message: Tmessage) => setMessages((curr) => [...curr, message]),
+      //   token
+      // );
       await connectToAgoraRTC(
         rooms[0]._id,
         userId,
         (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
-        (myVideo: ICameraVideoTrack) => setMyVideo(myVideo)
+        (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
+        token
       );
-      channelRef.current = channel;
+      // channelRef.current = channel;
     } else {
-      const room = await createRoom();
+      const { room, token } = await createRoom(userId);
       setRoom(room);
-      const { channel } = await connectToAgoraRTM(
-        room._id,
-        userId,
-        (message: Tmessage) => setMessages((curr) => [...curr, message])
-      );
+      // const { channel } = await connectToAgoraRTM(
+      //   room._id,
+      //   userId,
+      //   (message: Tmessage) => setMessages((curr) => [...curr, message]),
+      //   token
+      // );
       await connectToAgoraRTC(
         room._id,
         userId,
         (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
-        (myVideo: ICameraVideoTrack) => setMyVideo(myVideo)
+        (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
+        token
       );
-      channelRef.current = channel;
+      // channelRef.current = channel;
     }
   }
 
