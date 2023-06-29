@@ -73,3 +73,4 @@ export async function POST(request: NextRequest) {
     return new Response("failed to create new room", { status: 500 });
   }
 }
+//todo- fix appId not found from agora
