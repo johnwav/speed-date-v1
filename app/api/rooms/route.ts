@@ -22,10 +22,12 @@ function getToken(roomId: string, userId: string) {
     role,
     privilegeExpiredTs
   );
+
+  return token;
 }
 
 export async function GET(request: NextRequest) {
-  const userId = request.nextUrl.searchParams.get("userId")!;
+  const userId = await request.nextUrl.searchParams.get("userId")!;
   try {
     await dbConnect();
     const rooms = await Room.aggregate([

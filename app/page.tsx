@@ -89,6 +89,7 @@ async function connectToAgoraRTM(
 async function getRandomRoom(userId: string): Promise<TGetRandomRoomResponse> {
   const response = await fetch(`/api/rooms?userId=${userId}`);
   const rooms = await response.json();
+  console.log("response", rooms);
   return rooms;
 }
 
@@ -139,7 +140,7 @@ export default function Home() {
         token
       );
       await connectToAgoraRTC(
-        rooms[0]._id,
+        rooms[0]?._id,
         userId,
         (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
         (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
