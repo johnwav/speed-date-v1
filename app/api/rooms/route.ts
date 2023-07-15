@@ -6,7 +6,7 @@ import { NextRequest } from "next/server";
 
 function getToken(roomId: string, userId: string) {
   const appID = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
-  const appCertificate = process.env.AGORA_APP_CERT!;
+  const appCertificate = process.env.NEXT_PUBLIC_AGORA_APP_CERT!;
   const channelName = roomId;
   const account = userId;
   const role = RtcRole.PUBLISHER;

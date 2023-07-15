@@ -41,7 +41,7 @@ async function connectToAgoraRTC(
   await client.join(
     process.env.NEXT_PUBLIC_AGORA_APP_ID!,
     roomId,
-    // token,
+    token,
     userId
   );
 
@@ -132,12 +132,12 @@ export default function Home() {
     const { rooms, token } = await getRandomRoom(userId);
     if (rooms && rooms.length > 0) {
       setRoom(rooms[0]);
-      // const { channel } = await connectToAgoraRTM(
-      //   rooms[0]?._id,
-      //   userId,
-      //   (message: Tmessage) => setMessages((curr) => [...curr, message]),
-      //   token
-      // );
+      const { channel } = await connectToAgoraRTM(
+        rooms[0]?._id,
+        userId,
+        (message: Tmessage) => setMessages((curr) => [...curr, message]),
+        token
+      );
       await connectToAgoraRTC(
         rooms[0]._id,
         userId,
@@ -145,16 +145,16 @@ export default function Home() {
         (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
         token
       );
-      // channelRef.current = channel;
+      channelRef.current = channel;
     } else {
       const { room, token } = await createRoom(userId);
       setRoom(room);
-      // const { channel } = await connectToAgoraRTM(
-      //   room._id,
-      //   userId,
-      //   (message: Tmessage) => setMessages((curr) => [...curr, message]),
-      //   token
-      // );
+      const { channel } = await connectToAgoraRTM(
+        room._id,
+        userId,
+        (message: Tmessage) => setMessages((curr) => [...curr, message]),
+        token
+      );
       await connectToAgoraRTC(
         room._id,
         userId,
@@ -162,7 +162,7 @@ export default function Home() {
         (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
         token
       );
-      // channelRef.current = channel;
+      channelRef.current = channel;
     }
   }
 
