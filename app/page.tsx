@@ -139,6 +139,8 @@ export default function Home() {
         (message: Tmessage) => setMessages((curr) => [...curr, message]),
         token
       );
+
+//todo create token functionfor rtm
       await connectToAgoraRTC(
         rooms[0]?._id,
         userId,
