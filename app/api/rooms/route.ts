@@ -1,10 +1,15 @@
 // import { NextResponse } from "next/server";
 import dbConnect from "@/utils/database";
 import Room from "@/models/Rooms";
-import { RtcRole, RtcTokenBuilder } from "agora-access-token";
+import {
+  RtcRole,
+  RtcTokenBuilder,
+  RtmTokenBuilder,
+  RtmRole,
+} from "agora-access-token";
 import { NextRequest } from "next/server";
 
-function getToken(roomId: string, userId: string) {
+function getRtcToken(roomId: string, userId: string) {
   const appID = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
   const appCertificate = process.env.NEXT_PUBLIC_AGORA_APP_CERT!;
   const channelName = roomId;
@@ -20,6 +25,25 @@ function getToken(roomId: string, userId: string) {
     channelName,
     account,
     role,
+    privilegeExpiredTs
+  );
+
+  return token;
+}
+
+function getRtmToken(userId: string) {
+  const appID = process.env.NEXT_PUBLIC_AGORA_APP_ID!;
+  const appCertificate = process.env.NEXT_PUBLIC_AGORA_APP_CERT!;
+  const account = userId;
+  const expirationTimeInSeconds = 3600;
+  const currentTimeStamp = Math.floor(Date.now() / 1000);
+  const privilegeExpiredTs = currentTimeStamp + expirationTimeInSeconds;
+
+  const token = RtmTokenBuilder.buildToken(
+    appID,
+    appCertificate,
+    account,
+    RtmRole.Rtm_User,
     privilegeExpiredTs
   );
 
@@ -42,7 +66,7 @@ export async function GET(request: NextRequest) {
       return new Response(
         JSON.stringify({
           rooms,
-          token: getToken(roomId, userId),
+          token: getRtcToken(roomId, userId),
         }),
         { status: 200 }
       );
@@ -67,7 +91,7 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({
         room,
-        token: getToken(room._id, userId),
+        token: getRtcToken(room._id, userId),
       }),
       { status: 200 }
     );
