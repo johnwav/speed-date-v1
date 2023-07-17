@@ -18,7 +18,6 @@ function getRtcToken(roomId: string, userId: string) {
   const expirationTimeInSeconds = 3600;
   const currentTimeStamp = Math.floor(Date.now() / 1000);
   const privilegeExpiredTs = currentTimeStamp + expirationTimeInSeconds;
-
   const token = RtcTokenBuilder.buildTokenWithAccount(
     appID,
     appCertificate,
@@ -59,14 +58,15 @@ export async function GET(request: NextRequest) {
       { $sample: { size: 1 } },
     ]);
     if (rooms.length > 0) {
-      const roomId = rooms[0]._id;
+      const roomId = rooms[0]._id.toString();
       await Room.findByIdAndUpdate(roomId, {
         status: "chatting",
       });
       return new Response(
         JSON.stringify({
           rooms,
-          token: getRtcToken(roomId, userId),
+          rtcToken: getRtcToken(roomId.toString(), userId),
+          rtmToken: getRtmToken(userId),
         }),
         { status: 200 }
       );
@@ -91,7 +91,8 @@ export async function POST(request: NextRequest) {
     return new Response(
       JSON.stringify({
         room,
-        token: getRtcToken(room._id, userId),
+        rtcToken: getRtcToken(room._id.toString(), userId),
+        rtmToken: getRtmToken(userId),
       }),
       { status: 200 }
     );

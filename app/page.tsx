@@ -7,11 +7,13 @@ import { VideoPlayer } from "./components/VideoPlayer";
 
 type TCreateRoomResponse = {
   room: Room;
-  token: string;
+  rtcToken: string;
+  rtmToken: string;
 };
 
 type TGetRandomRoomResponse = {
-  token: string;
+  rtcToken: string;
+  rtmToken: string;
   rooms: Room[];
 };
 
@@ -48,7 +50,7 @@ async function connectToAgoraRTC(
   client.on("user-published", (themUser, mediaType) => {
     client.subscribe(themUser, mediaType).then(() => {
       if (mediaType === "video") {
-        onVideoConnect(themUser);
+        onVideoConnect(themUser.videoTrack);
       }
     });
   });
@@ -74,6 +76,7 @@ async function connectToAgoraRTM(
   });
   const channel = await client.createChannel(roomId);
   await channel.join();
+
   channel.on("ChannelMessage", (message, userId) => {
     onMessage({
       userId,
@@ -103,7 +106,7 @@ async function createRoom(userId: string): Promise<TCreateRoomResponse> {
 
 export default function Home() {
   const [room, setRoom] = useState<Room | undefined>();
-  const [userId] = useState(() => parseInt(`${Math.random() * 1e6}`) + "");
+  const [userId] = useState(() => parseInt(`${Math.random() * 1e2}`) + "");
   const [messages, setMessages] = useState<Tmessage[]>([]);
   const [input, setInput] = useState("");
   const [themVideo, setThemVideo] = useState<IRemoteVideoTrack>();
@@ -130,40 +133,39 @@ export default function Home() {
   }
 
   async function fetchRooms() {
-    const { rooms, token } = await getRandomRoom(userId);
+    const { rooms, rtcToken, rtmToken } = await getRandomRoom(userId);
     if (rooms && rooms.length > 0) {
       setRoom(rooms[0]);
       const { channel } = await connectToAgoraRTM(
         rooms[0]?._id,
         userId,
         (message: Tmessage) => setMessages((curr) => [...curr, message]),
-        token
+        rtmToken
       );
 
-//todo create token functionfor rtm
       await connectToAgoraRTC(
         rooms[0]?._id,
         userId,
         (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
         (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
-        token
+        rtcToken
       );
       channelRef.current = channel;
     } else {
-      const { room, token } = await createRoom(userId);
+      const { room, rtcToken, rtmToken } = await createRoom(userId);
       setRoom(room);
       const { channel } = await connectToAgoraRTM(
         room._id,
         userId,
         (message: Tmessage) => setMessages((curr) => [...curr, message]),
-        token
+        rtmToken
       );
       await connectToAgoraRTC(
         room._id,
         userId,
         (themVideo: IRemoteVideoTrack) => setThemVideo(themVideo),
         (myVideo: ICameraVideoTrack) => setMyVideo(myVideo),
-        token
+        rtcToken
       );
       channelRef.current = channel;
     }
